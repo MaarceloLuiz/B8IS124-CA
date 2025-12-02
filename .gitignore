@@ -25,3 +25,18 @@ yarn-error.log*
 # local env files
 config.sh
 .env*
+
+# Firebase
+.firebase/
+.firebaserc
+firebase-debug.log
+firebase-debug.*.log
+.runtimeconfig.json
+storage.rules.test
+
+# Firebase cache
+.firebase/hosting.*.cache
+
+# Firebase config (if you have a separate config file with sensitive data)
+# Uncomment the line below if you created a separate firebase config file
+# firebase-config.js
