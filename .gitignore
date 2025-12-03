@@ -33,6 +33,7 @@ firebase-debug.log
 firebase-debug.*.log
 .runtimeconfig.json
 storage.rules.test
+serviceAccountKey.json
 
 # Firebase cache
 .firebase/hosting.*.cache
