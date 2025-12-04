@@ -7,37 +7,31 @@ import (
 	"net/http"
 	"time"
 
-	geography "github.com/MaarceloLuiz/worldle-replica/pkg/geography/territories"
-	"github.com/MaarceloLuiz/worldle-replica/pkg/github"
+	firebase "github.com/MaarceloLuiz/worldle-replica/pkg/firebase"
 	"github.com/sirupsen/logrus"
 )
 
 func FetchSilhouette(country string) ([]byte, error) {
-	endpoint := fmt.Sprintf("contents/silhouettes/%s.png", country)
-	headers := map[string]string{
-		"Accept": "application/vnd.github.raw",
-	}
-
-	request, err := github.CreateGitHubRequest(endpoint, headers)
+	imageUrl, err := firebase.GetImageURL(country)
 	if err != nil {
-		logrus.Error("Error creating new GitHub request")
+		logrus.Errorf("Failed to get image URL from Firebase: %v", err)
 		return nil, err
 	}
 
-	response, err := http.DefaultClient.Do(request)
+	response, err := http.Get(imageUrl)
 	if err != nil {
-		logrus.Errorf("Failed to make request to GitHub API - Authorization issue or network error: %v", err)
+		logrus.Errorf("Failed to fetch image from Firebase storage: %v", err)
 		return nil, err
 	}
 	defer response.Body.Close()
 
 	if response.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to fetch silhouette from GitHub API")
+		return nil, fmt.Errorf("failed to fetch silhouette from Firebase storage: status code %d", response.StatusCode)
 	}
 
 	data, err := io.ReadAll(response.Body)
 	if err != nil {
-		logrus.Errorf("Failed to read response body from GitHub API: %v", err)
+		logrus.Errorf("Failed to read response body: %v", err)
 		return nil, err
 	}
 
@@ -45,7 +39,7 @@ func FetchSilhouette(country string) ([]byte, error) {
 }
 
 func GetRandomCountry() (string, error) {
-	countries, err := geography.GetAllTerritories()
+	territories, err := firebase.GetAllTerritories()
 	if err != nil {
 		logrus.Error("Failed to get all territories")
 		return "", err
@@ -54,8 +48,8 @@ func GetRandomCountry() (string, error) {
 	seed := time.Now().UnixNano() // to avoid seeding the same number every time
 	random := rand.New(rand.NewSource(seed))
 
-	randomIndex := random.Intn(len(countries))
-	randomCountry := countries[randomIndex]
+	randomIndex := random.Intn(len(territories))
+	randomTerritory := territories[randomIndex]
 
-	return randomCountry, nil
+	return randomTerritory, nil
 }
