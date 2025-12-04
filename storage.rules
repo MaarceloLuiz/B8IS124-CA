@@ -1,7 +1,7 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    match /Silhouette/{countryName} {
+    match /silhouettes/{countryName} {
       allow read: if true;  // Public read access for all country images
       allow write: if false; // No public writes
     }
