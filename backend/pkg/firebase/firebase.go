@@ -37,9 +37,7 @@ func GetImageURL(fileName string) (string, error) {
 	return url, nil
 }
 
-func GetAllTerritories() ([]string, error) {
-	logrus.Info("=== GetAllTerritories called ===")
-
+func GetAllTerritoriesFromStorage() ([]string, error) {
 	if err := initFirebaseApp(); err != nil {
 		logrus.Errorf("Failed to initialize Firebase app: %v", err)
 		return nil, fmt.Errorf("failed to initialize Firebase app: %v", err)
@@ -115,7 +113,6 @@ func initFirebaseApp() error {
 		StorageBucket: config.Bucket,
 	}
 
-	logrus.Info("=== Initializing Firebase app ===")
 	ctx := context.Background()
 	serviceAccountPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
 	projectID := os.Getenv("FIREBASE_PROJECT_ID")

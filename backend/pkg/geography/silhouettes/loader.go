@@ -8,6 +8,7 @@ import (
 	"time"
 
 	firebase "github.com/MaarceloLuiz/worldle-replica/pkg/firebase"
+	geography "github.com/MaarceloLuiz/worldle-replica/pkg/geography/territories"
 	"github.com/sirupsen/logrus"
 )
 
@@ -39,7 +40,7 @@ func FetchSilhouette(country string) ([]byte, error) {
 }
 
 func GetRandomCountry() (string, error) {
-	territories, err := firebase.GetAllTerritories()
+	territories, err := geography.GetAllTerritories()
 	if err != nil {
 		logrus.Error("Failed to get all territories")
 		return "", err
