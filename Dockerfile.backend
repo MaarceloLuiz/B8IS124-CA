@@ -1,5 +1,8 @@
 FROM golang:1.24-alpine
 WORKDIR /app
+
 COPY backend/ .
+COPY serviceAccountKey.json /app/serviceAccountKey.json
+
 RUN go mod download
 CMD [ "go", "run", "cmd/worldle/main.go" ]
