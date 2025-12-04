@@ -3,6 +3,7 @@ import Silhouette from './components/Silhouette';
 import GuessInput from './components/GuessInput';
 import GuessList from './components/GuessList';
 import EndGame from './components/EndGame';
+import config from './config';
 import './App.css';
 
 function App() {
@@ -21,19 +22,16 @@ function App() {
 
         if (!session) {
           // Create a new game session
-          const sessionRes = await fetch('http://localhost:8080/api/newgame');
-          const sessionText = await sessionRes.text(); // Get response as text first
+          const sessionRes = await fetch(`${config.API_URL}/api/newgame`);
+          const sessionText = await sessionRes.text();
 
           try {
-            // Try to parse as JSON
             const sessionData = JSON.parse(sessionText);
             session = sessionData.sessionId;
             localStorage.setItem('worldleSession', session);
             setSessionId(session);
           } catch (e) {
-            // If not valid JSON, extract session ID from text
             console.log("Response is not JSON:", sessionText);
-            // Assuming the response contains the session ID somewhere
             const match = sessionText.match(/session[:\s]+([a-zA-Z0-9-]+)/i);
             if (match && match[1]) {
               session = match[1];
@@ -48,16 +46,14 @@ function App() {
         }
 
         // Get the silhouette image directly as a blob
-        const silhouetteRes = await fetch(`http://localhost:8080/api/silhouette`, {
+        const silhouetteRes = await fetch(`${config.API_URL}/api/silhouette`, {
           headers: {
             'Accept': 'image/png,image/*'
           }
         });
 
-        // Check if the response is an image
         const contentType = silhouetteRes.headers.get('content-type');
         if (contentType && contentType.includes('image')) {
-          // Create a blob URL from the image data
           const blob = await silhouetteRes.blob();
           const imageUrl = URL.createObjectURL(blob);
           setSilhouette(imageUrl);
@@ -66,7 +62,7 @@ function App() {
           try {
             const data = await silhouetteRes.json();
             if (data.imageUrl) {
-              setSilhouette(`http://localhost:8080${data.imageUrl}`);
+              setSilhouette(`${config.API_URL}${data.imageUrl}`);
             }
           } catch (e) {
             console.error("Could not parse silhouette response:", e);
@@ -74,7 +70,7 @@ function App() {
         }
 
         // Get territories list
-        const territoriesRes = await fetch('http://localhost:8080/api/territories');
+        const territoriesRes = await fetch(`${config.API_URL}/api/territories`);
         setTerritories(await territoriesRes.json());
       } catch (error) {
         console.error('Initialization error:', error);
@@ -88,7 +84,7 @@ function App() {
     if (isGameOver) return;
 
     try {
-      const res = await fetch('http://localhost:8080/api/guess', {
+      const res = await fetch(`${config.API_URL}/api/guess`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId, guess: country })
@@ -107,8 +103,8 @@ function App() {
       setGuesses(prev => [...prev, newGuess]);
 
       if (result.isCorrect || guesses.length >= 5) {
-        // Game is over, fetch the answer from the new endpoint
-        const answerRes = await fetch('http://localhost:8080/api/answer', {
+        // Game is over, fetch the answer
+        const answerRes = await fetch(`${config.API_URL}/api/answer`, {
           method: 'GET'
         });
 
