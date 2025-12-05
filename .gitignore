@@ -26,6 +26,10 @@ yarn-error.log*
 config.sh
 .env*
 
+# local tests
+Dockerfile.backend.dev
+Dockerfile.frontend.dev
+
 # Firebase
 .firebase/
 .firebaserc
