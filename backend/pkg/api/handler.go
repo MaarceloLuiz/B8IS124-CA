@@ -105,7 +105,6 @@ func GuessHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid request payload", http.StatusBadRequest)
 		return
 	}
-	guessCountry.Guess = strings.ReplaceAll(guessCountry.Guess, " ", "_")
 
 	answerCountry := game.State.Country
 	if answerCountry == "" {

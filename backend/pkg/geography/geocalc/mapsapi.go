@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 )
@@ -21,14 +22,36 @@ func init() {
 
 func geocode(country string) (float64, float64, error) {
 	url := fmt.Sprintf("https://maps.googleapis.com/maps/api/geocode/json?address=%s&key=%s",
-		country, mapsApiKey)
+		strings.ReplaceAll(country, " ", "_"), mapsApiKey)
 
 	results, err := mapsApi(url)
 	if err != nil {
+		logrus.Errorf("Error fetching geocode from Google Maps API for '%s': %v", country, err)
 		return 0, 0, fmt.Errorf("failed to get geocode from Google Maps API: %w", err)
 	}
 
-	result := results["results"].([]interface{})[0].(map[string]interface{})
+	// Check status
+	status, ok := results["status"].(string)
+	if !ok {
+		logrus.Errorf("Invalid response format from Google Maps API for '%s'", country)
+		return 0, 0, fmt.Errorf("invalid response format from Google Maps API")
+	}
+	logrus.Infof("Google Maps API status: %s", status)
+
+	// Check if results array exists and has elements
+	resultsArray, ok := results["results"].([]interface{})
+	if !ok {
+		logrus.Errorf("Invalid results format from Google Maps API for '%s'", country)
+		return 0, 0, fmt.Errorf("invalid results format from Google Maps API")
+	}
+
+	if len(resultsArray) == 0 {
+		logrus.Errorf("No geocoding results for '%s' (status: %s)", country, status)
+		return 0, 0, fmt.Errorf("no geocoding results found for '%s' (status: %s)", country, status)
+	}
+
+	// Now safely access the first result
+	result := resultsArray[0].(map[string]interface{})
 	geometry := result["geometry"].(map[string]interface{})
 	location := geometry["location"].(map[string]interface{})
 	lat := location["lat"].(float64)

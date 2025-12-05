@@ -9,12 +9,12 @@ const GuessInput = ({ territories, onSubmit, disabled }) => {
   const suggestionsRef = useRef(null);
   const selectedItemRef = useRef(null);
 
-  // FIX: Wrapped in useCallback to stabilize the function reference
   const getSuggestions = useCallback((value) => {
     const query = value.toLowerCase();
-    // If territories is not an array or is empty, return empty array
+    
+    // If territories is not loaded yet, return empty array
     if (!Array.isArray(territories) || territories.length === 0) {
-      console.log("Territories not available:", territories);
+      // Don't log every time, it's spammy
       return [];
     }
 
@@ -38,7 +38,7 @@ const GuessInput = ({ territories, onSubmit, disabled }) => {
           (t.code && t.code.toLowerCase() === query)
         );
     }
-  }, [territories]); // Dependency ensures it only updates when territories change
+  }, [territories]);
 
   const handleSubmit = () => {
     if (!input.trim() || disabled) return;

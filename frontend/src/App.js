@@ -70,6 +70,15 @@ function App() {
         body: JSON.stringify({ sessionId, guess: country })
       });
 
+      // Check if response is OK
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error(`Server error (${res.status}):`, errorText);
+        alert(`Failed to process guess for "${country}". The server couldn't find coordinates for this location.`);
+        return;
+      }
+
+      // Try to parse JSON
       const result = await res.json();
       console.log("API response:", result);
 
@@ -99,6 +108,7 @@ function App() {
       }
     } catch (error) {
       console.error('Guess error:', error);
+      alert(`Failed to submit guess. Error: ${error.message}`);
     }
   };
 
