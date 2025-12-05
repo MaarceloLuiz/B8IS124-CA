@@ -2,8 +2,10 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/MaarceloLuiz/worldle-replica/pkg/game"
 	"github.com/MaarceloLuiz/worldle-replica/pkg/geography/geocalc"
@@ -11,14 +13,23 @@ import (
 )
 
 func NewGameHandler(w http.ResponseWriter, r *http.Request) {
-	err := game.StartNewGame()
+	sessionID := r.URL.Query().Get("sessionId")
+	if sessionID == "" {
+		sessionID = fmt.Sprintf("%d", time.Now().UnixNano())
+	}
+
+	err := game.StartNewGame(sessionID)
 	if err != nil {
 		http.Error(w, "Failed to start new game", http.StatusInternalServerError)
 		return
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("New game started"))
+	json.NewEncoder(w).Encode(map[string]string{
+		"sessionId": sessionID,
+		"message":   "New game started",
+	})
 }
 
 func SilhouetteHandler(w http.ResponseWriter, r *http.Request) {

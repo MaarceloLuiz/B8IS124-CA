@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Silhouette from './components/Silhouette';
 import GuessInput from './components/GuessInput';
 import GuessList from './components/GuessList';
@@ -14,62 +14,42 @@ function App() {
   const [answer, setAnswer] = useState(null);
   const [answerMapUrl, setAnswerMapUrl] = useState(null);
   const [isGameOver, setIsGameOver] = useState(false);
+  
+  const initialized = useRef(false);
 
   useEffect(() => {
+    // Prevent double initialization in React StrictMode
+    if (initialized.current) return;
+    initialized.current = true;
+
     const initializeGame = async () => {
       try {
+        // Get existing session from localStorage (if any)
         let session = localStorage.getItem('worldleSession');
 
-        if (!session) {
-          // Create a new game session
-          const sessionRes = await fetch(`${config.API_URL}/api/newgame`);
-          const sessionText = await sessionRes.text();
+        // ALWAYS call /api/newgame (pass session if exists)
+        const url = session 
+          ? `${config.API_URL}/api/newgame?sessionId=${session}`
+          : `${config.API_URL}/api/newgame`;
+        
+        const sessionRes = await fetch(url);
+        const sessionData = await sessionRes.json();
+        
+        // Store the session returned by backend
+        session = sessionData.sessionId;
+        localStorage.setItem('worldleSession', session);
+        setSessionId(session);
 
-          try {
-            const sessionData = JSON.parse(sessionText);
-            session = sessionData.sessionId;
-            localStorage.setItem('worldleSession', session);
-            setSessionId(session);
-          } catch (e) {
-            console.log("Response is not JSON:", sessionText);
-            const match = sessionText.match(/session[:\s]+([a-zA-Z0-9-]+)/i);
-            if (match && match[1]) {
-              session = match[1];
-              localStorage.setItem('worldleSession', session);
-              setSessionId(session);
-            } else {
-              console.error("Could not extract session ID from response");
-            }
-          }
-        } else {
-          setSessionId(session);
-        }
-
-        // Get the silhouette image directly as a blob
+        // Now fetch silhouette (game is initialized)
         const silhouetteRes = await fetch(`${config.API_URL}/api/silhouette`, {
-          headers: {
-            'Accept': 'image/png,image/*'
-          }
+          headers: { 'Accept': 'image/png,image/*' }
         });
 
-        const contentType = silhouetteRes.headers.get('content-type');
-        if (contentType && contentType.includes('image')) {
-          const blob = await silhouetteRes.blob();
-          const imageUrl = URL.createObjectURL(blob);
-          setSilhouette(imageUrl);
-        } else {
-          console.error("Silhouette response is not an image:", contentType);
-          try {
-            const data = await silhouetteRes.json();
-            if (data.imageUrl) {
-              setSilhouette(`${config.API_URL}${data.imageUrl}`);
-            }
-          } catch (e) {
-            console.error("Could not parse silhouette response:", e);
-          }
-        }
+        const blob = await silhouetteRes.blob();
+        const imageUrl = URL.createObjectURL(blob);
+        setSilhouette(imageUrl);
 
-        // Get territories list
+        // Get territories
         const territoriesRes = await fetch(`${config.API_URL}/api/territories`);
         setTerritories(await territoriesRes.json());
       } catch (error) {
