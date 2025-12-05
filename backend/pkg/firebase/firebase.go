@@ -33,7 +33,7 @@ func GetImageURL(fileName string) (string, error) {
 		fileName,
 	)
 
-	logrus.Infof("Generated image URL: %s", url)
+	// logrus.Infof("Generated image URL: %s", url) // DEBUG LOG
 	return url, nil
 }
 
@@ -115,10 +115,6 @@ func initFirebaseApp() error {
 
 	ctx := context.Background()
 	serviceAccountPath := os.Getenv("GOOGLE_APPLICATION_CREDENTIALS")
-	projectID := os.Getenv("FIREBASE_PROJECT_ID")
-
-	logrus.Infof("Project ID: %s", projectID)
-	logrus.Infof("Service account path: %s", serviceAccountPath)
 
 	// Check if service account file exists
 	if serviceAccountPath != "" {
@@ -157,7 +153,8 @@ func loadFirebaseConfig() (*FirebaseConfig, error) {
 	}
 
 	bucket := fmt.Sprintf("%s.firebasestorage.app", projectID)
-	logrus.Infof("Loaded Firebase config - Project: %s, Bucket: %s", projectID, bucket)
+	// logrus.Infof("Loaded Firebase config - Project: %s, Bucket: %s", projectID, bucket) // DEBUG LOG
+	logrus.Info("Firebase config loaded successfully")
 
 	return &FirebaseConfig{
 		ProjectID: projectID,
