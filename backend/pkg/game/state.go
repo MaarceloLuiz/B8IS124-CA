@@ -25,7 +25,8 @@ func StartNewGame(sessionID string) error {
 	defer State.Mutex.Unlock()
 
 	if State.SessionID == sessionID && State.Country != "" {
-		logrus.Infof("Reusing existing game for session %s: %s", sessionID, State.Country)
+		// logrus.Infof("Reusing existing game for session %s: %s", sessionID, State.Country) // DEBUG LOG
+		logrus.Info("Reusing existing game session")
 		return nil
 	}
 
