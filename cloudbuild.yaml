@@ -1,0 +1,55 @@
+steps:
+  # backend
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-f', 'Dockerfile.backend', '-t', 'gcr.io/$PROJECT_ID/worldle-backend', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/worldle-backend']
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'worldle-backend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/worldle-backend'
+      - '--region'
+      - 'europe-west2'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars'
+      - 'MAPS_API_KEY=${_MAPS_API_KEY},ALLOWED_ORIGIN=${_ALLOWED_ORIGIN},FIREBASE_PROJECT_ID=$PROJECT_ID'
+
+  # frontend
+  - name: 'node:18'
+    entrypoint: npm
+    args: ['install']
+    dir: 'frontend'
+
+  # Injects the Backend URL into the build
+  - name: 'node:18'
+    entrypoint: npm
+    args: ['run', 'build']
+    dir: 'frontend'
+    env:
+      - 'REACT_APP_API_URL=${_BACKEND_URL}'
+
+  - name: 'node:18'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        npm install -g firebase-tools
+        firebase deploy --project $PROJECT_ID --only hosting --token ${_FIREBASE_TOKEN}
+    dir: 'frontend'
+
+substitutions:
+  _MAPS_API_KEY: 'PLACEHOLDER' 
+  _ALLOWED_ORIGIN: 'https://b8is124-ca-91eb2.web.app'
+  _BACKEND_URL: 'https://worldle-backend-rcnbocxk7o-nw.a.run.app'
+  _FIREBASE_TOKEN: 'PLACEHOLDER'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
